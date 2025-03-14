@@ -5,71 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Beli Produk - Zioles Store</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h2 { color: #007bff; }
-        label, select, input { display: block; margin-top: 10px; }
-        button { margin-top: 15px; padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
-        button:hover { background: #218838; }
-        .form-group { display: none; margin-top: 15px; }
+        /* Styling dasar */
+        body { font-family: 'Poppins', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; text-align: center; }
+        h2 { color: #333; }
+        .container { max-width: 400px; background: white; padding: 20px; margin: auto; border-radius: 10px; box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2); }
+        label { font-weight: bold; margin-top: 10px; display: block; text-align: left; }
+        select, input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; }
+        .form-group { display: none; margin-top: 15px; opacity: 0; transform: scale(0.95); transition: all 0.3s ease-in-out; }
+        .form-group.active { display: block; opacity: 1; transform: scale(1); }
+        .btn { margin-top: 15px; padding: 12px; width: 100%; background: #007bff; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 5px; transition: 0.3s; }
+        .btn:hover { background: #0056b3; }
     </style>
 </head>
 <body>
 
-    <h2>Pilih Produk</h2>
-    
-    <label for="produk">Produk:</label>
-    <select id="produk" onchange="tampilkanForm()">
-        <option value="">-- Pilih Produk --</option>
-        <option value="VPS Digital Ocean">VPS Digital Ocean</option>
-        <option value="JASTEB">JASTEB</option>
-        <option value="UNCHEK">UNCHEK</option>
-        <option value="Script HTML">Script HTML</option>
-    </select>
+    <div class="container">
+        <h2>Beli Produk Zioles Store</h2>
 
-    <div id="form-vps" class="form-group">
-        <label for="ram">Pilih RAM VPS:</label>
-        <select id="ram">
-            <option value="1">1 GB</option>
-            <option value="2">2 GB</option>
-            <option value="4">4 GB</option>
-            <option value="8">8 GB</option>
+        <label for="produk">Pilih Produk:</label>
+        <select id="produk" onchange="tampilkanForm()">
+            <option value="">-- Pilih Produk --</option>
+            <option value="VPS Digital Ocean">VPS Digital Ocean</option>
+            <option value="JASTEB">JASTEB</option>
+            <option value="UNCHEK">UNCHEK</option>
+            <option value="Script HTML">Script HTML</option>
         </select>
+
+        <div id="form-vps" class="form-group">
+            <label for="ram">Pilih RAM VPS:</label>
+            <select id="ram">
+                <option value="1">1 GB</option>
+                <option value="2">2 GB</option>
+                <option value="4">4 GB</option>
+                <option value="8">8 GB</option>
+            </select>
+        </div>
+
+        <div id="form-jasteb" class="form-group">
+            <label for="harga-jasteb">Harga (2K - 500K):</label>
+            <input type="number" id="harga-jasteb" min="2000" max="500000" step="1000">
+            <label for="email-jasteb">Email:</label>
+            <input type="email" id="email-jasteb">
+        </div>
+
+        <div id="form-unchek" class="form-group">
+            <label for="harga-unchek">Harga (5K - 1JT):</label>
+            <input type="number" id="harga-unchek" min="5000" max="1000000" step="1000">
+            <label for="email-unchek">Email:</label>
+            <input type="email" id="email-unchek">
+        </div>
+
+        <div id="form-script" class="form-group">
+            <p>Beli langsung di admin.</p>
+        </div>
+
+        <label for="pembayaran">Metode Pembayaran:</label>
+        <select id="pembayaran">
+            <option value="Dana">Dana</option>
+            <option value="GoPay">GoPay</option>
+        </select>
+
+        <button class="btn" onclick="kirimPesan()">Beli Sekarang</button>
     </div>
-
-    <div id="form-jasteb" class="form-group">
-        <label for="harga-jasteb">Harga (Minimal 2K - 500K):</label>
-        <input type="number" id="harga-jasteb" min="2000" max="500000" step="1000">
-        <label for="email-jasteb">Email:</label>
-        <input type="email" id="email-jasteb">
-    </div>
-
-    <div id="form-unchek" class="form-group">
-        <label for="harga-unchek">Harga (Minimal 5K - 1JT):</label>
-        <input type="number" id="harga-unchek" min="5000" max="1000000" step="1000">
-        <label for="email-unchek">Email:</label>
-        <input type="email" id="email-unchek">
-    </div>
-
-    <div id="form-script" class="form-group">
-        <p>Beli langsung di admin.</p>
-    </div>
-
-    <label for="pembayaran">Metode Pembayaran:</label>
-    <select id="pembayaran">
-        <option value="Dana">Dana</option>
-        <option value="GoPay">GoPay</option>
-    </select>
-
-    <button onclick="kirimPesan()">Beli Sekarang</button>
 
     <script>
         function tampilkanForm() {
-            document.querySelectorAll('.form-group').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.form-group').forEach(el => el.classList.remove('active'));
             let produk = document.getElementById('produk').value;
-            if (produk === "VPS Digital Ocean") document.getElementById('form-vps').style.display = 'block';
-            if (produk === "JASTEB") document.getElementById('form-jasteb').style.display = 'block';
-            if (produk === "UNCHEK") document.getElementById('form-unchek').style.display = 'block';
-            if (produk === "Script HTML") document.getElementById('form-script').style.display = 'block';
+            if (produk === "VPS Digital Ocean") document.getElementById('form-vps').classList.add('active');
+            if (produk === "JASTEB") document.getElementById('form-jasteb').classList.add('active');
+            if (produk === "UNCHEK") document.getElementById('form-unchek').classList.add('active');
+            if (produk === "Script HTML") document.getElementById('form-script').classList.add('active');
         }
 
         function kirimPesan() {
@@ -81,15 +87,17 @@
             if (produk === "VPS Digital Ocean") {
                 let ram = document.getElementById('ram').value;
                 harga = 15000 * ram;
-                pesan += `PRODUK: ${produk} - ${ram} GB%0A`;
+                pesan += `PRODUK: ${produk} - ${ram} GB%0AHARGA: Rp ${harga}%0A`;
             } else if (produk === "JASTEB") {
                 harga = document.getElementById('harga-jasteb').value;
                 let email = document.getElementById('email-jasteb').value;
-                pesan += `PRODUK: ${produk}%0AHARGA: ${harga}%0AEMAIL: ${email}%0A`;
+                if (!harga || harga < 2000 || harga > 500000) return alert("Harga JASTEB harus antara 2K - 500K!");
+                pesan += `PRODUK: ${produk}%0AHARGA: Rp ${harga}%0AEMAIL: ${email}%0A`;
             } else if (produk === "UNCHEK") {
                 harga = document.getElementById('harga-unchek').value;
                 let email = document.getElementById('email-unchek').value;
-                pesan += `PRODUK: ${produk}%0AHARGA: ${harga}%0AEMAIL: ${email}%0A`;
+                if (!harga || harga < 5000 || harga > 1000000) return alert("Harga UNCHeK harus antara 5K - 1JT!");
+                pesan += `PRODUK: ${produk}%0AHARGA: Rp ${harga}%0AEMAIL: ${email}%0A`;
             } else if (produk === "Script HTML") {
                 harga = "Hubungi Admin";
                 pesan += `PRODUK: ${produk}%0A`;
@@ -106,4 +114,4 @@
     </script>
 
 </body>
-  </html>
+</html>
