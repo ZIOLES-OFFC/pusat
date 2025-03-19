@@ -5,27 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Walkie-Talkie WebRTC</title>
     <style>
+        @font-face {
+            font-family: 'Digital';
+            src: url('https://assets.codepen.io/28963/digital-7.ttf');
+        }
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 50px;
+            background-color: #222;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        input, button {
-            font-size: 18px;
-            padding: 10px;
-            margin: 10px;
+        .walkie-talkie {
+            background-color: #444;
+            width: 250px;
+            height: 500px;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            position: relative;
+            text-align: center;
+        }
+        .screen {
+            background-color: #0a0;
+            color: #fff;
+            width: 90%;
+            height: 50px;
+            margin: 10px auto;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            font-family: 'Digital', sans-serif;
+        }
+        .input-box {
+            width: 90%;
+            height: 40px;
+            font-size: 20px;
+            text-align: center;
+            margin: 10px auto;
+            border: 2px solid #0a0;
+            border-radius: 5px;
+            background-color: black;
+            color: lime;
+        }
+        .btn {
+            width: 90%;
+            height: 60px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            margin: 10px auto;
+            cursor: pointer;
+            display: block;
+        }
+        .talk-btn {
+            background-color: red;
+            color: white;
+            font-weight: bold;
+        }
+        .leave-btn {
+            background-color: gray;
+            color: white;
+        }
+        .antenna {
+            width: 10px;
+            height: 50px;
+            background-color: black;
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>Walkie-Talkie WebRTC</h1>
-    <label>Masukkan Nomor Radio (00.00 - 99.99):</label>
-    <input type="text" id="radioNumber" placeholder="Contoh: 12.34" pattern="\d{2}\.\d{2}">
-    <button onclick="joinChannel()">Gabung</button>
-    <br><br>
-    <button id="talkButton" disabled>Tekan untuk Bicara</button>
-    <button onclick="leaveCall()">Keluar</button>
-    <audio id="remoteAudio" autoplay></audio>
+    <div class="walkie-talkie">
+        <div class="antenna"></div>
+        <div class="screen" id="display">00.00</div>
+        <input type="text" id="radioNumber" class="input-box" placeholder="Masukkan Nomor Radio">
+        <button class="btn" onclick="joinChannel()">Gabung</button>
+        <button class="btn talk-btn" id="talkButton" disabled>Tekan & Tahan untuk Bicara</button>
+        <button class="btn leave-btn" onclick="leaveCall()">Keluar</button>
+        <audio id="remoteAudio" autoplay></audio>
+    </div>
+
+    <!-- Suara efek radio -->
+    <audio id="radioStart" src="https://www.soundjay.com/button/sounds/button-29.mp3"></audio>
+    <audio id="radioEnd" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
     <script>
         let peerConnection;
@@ -42,6 +114,8 @@
                 return;
             }
 
+            document.getElementById("display").textContent = radioID;
+
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             peerConnection = new RTCPeerConnection();
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
@@ -55,12 +129,24 @@
             document.getElementById("talkButton").disabled = false;
         }
 
-        document.getElementById("talkButton").addEventListener("mousedown", () => {
+        const talkButton = document.getElementById("talkButton");
+        const radioStart = document.getElementById("radioStart");
+        const radioEnd = document.getElementById("radioEnd");
+
+        // Tahan tombol untuk berbicara
+        talkButton.addEventListener("mousedown", () => {
+            radioStart.play();
             localStream.getAudioTracks()[0].enabled = true;
         });
 
-        document.getElementById("talkButton").addEventListener("mouseup", () => {
+        talkButton.addEventListener("mouseup", () => {
             localStream.getAudioTracks()[0].enabled = false;
+            radioEnd.play();
+        });
+
+        talkButton.addEventListener("mouseleave", () => {
+            localStream.getAudioTracks()[0].enabled = false;
+            radioEnd.play();
         });
 
         function leaveCall() {
