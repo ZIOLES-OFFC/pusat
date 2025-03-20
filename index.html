@@ -5,43 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pelacak IP Email</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 0;
-            text-align: center;
-            background-color: #f4f4f4;
-        }
-        h2 {
-            color: #333;
-        }
-        textarea {
-            width: 90%;
-            height: 150px;
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 10px;
-            background: white;
-            display: none;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f4f4f4; }
+        textarea { width: 90%; height: 150px; margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; background: white; display: none; border: 1px solid #ddd; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -61,13 +29,21 @@
 
     <script>
         function extractIP(header) {
-            const pattern = /Received: from .* (\d+\.\d+\.\d+\.\d+)/g;
-            let matches = [...header.matchAll(pattern)];
-            return matches.length ? matches[matches.length - 1][1] : null;
+            // Coba beberapa pola regex untuk menangkap IP pengirim
+            const patterns = [
+                /Received: from .*? (?:\S+ )?([\d.]+)/g,  // Pola 1: IP dalam []
+                /Received: from .*? ([\d.]+)/g                 // Pola 2: IP dalam ()
+            ];
+
+            for (let pattern of patterns) {
+                let matches = [...header.matchAll(pattern)];
+                if (matches.length) return matches[matches.length - 1][1]; // Ambil IP terakhir
+            }
+            return null;
         }
 
         function trackIP() {
-            let headerText = document.getElementById("emailHeader").value;
+            let headerText = document.getElementById("emailHeader").value.trim();
             let ip = extractIP(headerText);
 
             if (!ip) {
@@ -81,11 +57,14 @@
             fetch(`https://ipinfo.io/${ip}/json`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById("location").textContent = `${data.city}, ${data.region}, ${data.country}`;
+                    document.getElementById("location").textContent = data.city + ", " + data.region + ", " + data.country;
                     document.getElementById("isp").textContent = data.org;
                     document.getElementById("coordinates").textContent = data.loc;
                 })
-                .catch(error => console.error("Gagal mendapatkan data IP", error));
+                .catch(error => {
+                    console.error("Gagal mendapatkan data IP", error);
+                    alert("Gagal mendapatkan informasi IP. Pastikan Anda terhubung ke internet.");
+                });
         }
     </script>
 
