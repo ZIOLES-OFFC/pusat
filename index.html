@@ -3,63 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pelacak IP Email</title>
+    <title>Pelacak IP Akurat</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f4f4f4; }
-        textarea { width: 90%; height: 150px; margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        input { width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
         button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
         button:hover { background: #0056b3; }
         .result { margin-top: 20px; padding: 10px; background: white; display: none; border: 1px solid #ddd; border-radius: 5px; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <h2>Pelacak IP dari Header Email</h2>
-    <textarea id="emailHeader" placeholder="Tempelkan header email di sini..."></textarea>
+    <h2>Pelacak IP Akurat</h2>
+    <input type="text" id="ipAddressInput" placeholder="Masukkan alamat IP...">
     <br>
     <button onclick="trackIP()">Lacak IP</button>
     
     <div class="result" id="result">
         <h3>Hasil Pelacakan:</h3>
-        <p><b>IP Pengirim:</b> <span id="ipAddress"></span></p>
+        <p><b>IP:</b> <span id="ipAddress"></span></p>
         <p><b>Lokasi:</b> <span id="location"></span></p>
         <p><b>ISP:</b> <span id="isp"></span></p>
         <p><b>Koordinat:</b> <span id="coordinates"></span></p>
+        <p><b>Google Maps:</b> <a id="mapsLink" href="#" target="_blank">Lihat Lokasi</a></p>
     </div>
 
     <script>
-        function extractIP(header) {
-            // Coba beberapa pola regex untuk menangkap IP pengirim
-            const patterns = [
-                /Received: from .*? (?:\S+ )?([\d.]+)/g,  // Pola 1: IP dalam []
-                /Received: from .*? ([\d.]+)/g                 // Pola 2: IP dalam ()
-            ];
-
-            for (let pattern of patterns) {
-                let matches = [...header.matchAll(pattern)];
-                if (matches.length) return matches[matches.length - 1][1]; // Ambil IP terakhir
-            }
-            return null;
-        }
-
         function trackIP() {
-            let headerText = document.getElementById("emailHeader").value.trim();
-            let ip = extractIP(headerText);
-
+            let ip = document.getElementById("ipAddressInput").value.trim();
             if (!ip) {
-                alert("Alamat IP tidak ditemukan dalam header email!");
+                alert("Masukkan alamat IP terlebih dahulu!");
                 return;
             }
-
-            document.getElementById("ipAddress").textContent = ip;
-            document.getElementById("result").style.display = "block";
 
             fetch(`https://ipinfo.io/${ip}/json`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById("location").textContent = data.city + ", " + data.region + ", " + data.country;
+                    if (data.bogon) {
+                        alert("IP ini adalah alamat internal (Bogon) dan tidak dapat dilacak.");
+                        return;
+                    }
+
+                    document.getElementById("ipAddress").textContent = data.ip;
+                    document.getElementById("location").textContent = `${data.city}, ${data.region}, ${data.country}`;
                     document.getElementById("isp").textContent = data.org;
                     document.getElementById("coordinates").textContent = data.loc;
+
+                    let mapsUrl = `https://www.google.com/maps?q=${data.loc}`;
+                    document.getElementById("mapsLink").href = mapsUrl;
+
+                    document.getElementById("result").style.display = "block";
                 })
                 .catch(error => {
                     console.error("Gagal mendapatkan data IP", error);
